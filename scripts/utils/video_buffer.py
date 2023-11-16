@@ -67,7 +67,9 @@ class Numpy_Buffer(Buffer):
                     queue.append(np.concatenate((b1, b2), axis=0))
                     self.start = bs+1
             
-            else: queue.append(None)
+            else: 
+                pass
+                # queue.append(None)
 
 
 
@@ -98,40 +100,31 @@ class Video_Reader:
         self.cap.release()
 
 
-    def write(self,
+    def write(self, 
               queue: deque, 
-              lock: threading.Lock,
-              func: Optional[callable] = None
-              ) -> None:        
+              lock: threading.Lock, 
+              func: Optional[callable] = None) -> None:        
         while not self.stop_event.is_set():
-            if func is None:
-                self.buffer.write(queue, lock)
-
-            else:
-                func(self.buffer.write, queue, lock)
+            if func is None: self.buffer.write(queue, lock)
+            else: func(self.buffer.write, queue, lock)
     
 
-    def start_threads(self, 
-                      queue: deque, 
-                      func: Optional[callable] = None
-                      ) -> None:
+    def start_threads(self, queue: deque, func: Optional[callable] = None) -> None:
         rt = threading.Thread(target=self.read)
         wt = threading.Thread(target=self.write, kwargs={
-            'queue': queue,
-            'func': func,
-            'lock': (self.lock)
+            'queue': queue, 'func': func, 'lock': (self.lock)
         })
 
-        rt.start()
-        wt.start()
+        rt.start(); wt.start()
 
 
     def stop_threads(self) -> None: self.stop_event.set()
 
 
 def main():
+    height, width = 480, 640
     q = deque(maxlen=60)
-    np_buff = Numpy_Buffer((480, 640, 3), 30)
+    np_buff = Numpy_Buffer((height, width, 3), 30)
     
     vr = Video_Reader(np_buff)
     vr.start_threads(q)
@@ -141,8 +134,10 @@ def main():
             try:
                 batch = q[0]
                 q.popleft()
-                print(batch[0][0][0])
-            except: pass
+                print(f'{batch[0][0][0]}')
+            except: 
+                print(batch)
+                pass
 
     vr.stop_threads()
 
